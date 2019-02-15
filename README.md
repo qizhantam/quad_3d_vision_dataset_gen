@@ -1,4 +1,7 @@
-oInstalling dependencies
+quad_dataset_gen
+Generating labeled 3D vision dataset for quadrotor pose detection
+
+Installing dependencies
 -----------------------
 1. Install the Intel RealSense SDK and ROS wrapper: https://github.com/intel-ros/realsense
 2. If using with the MSL/Stanford Flight Room set up, get ros_vrpn_client from https://github.com/StanfordMSL which also requires vrpn_catkin, glog_catkin, and catkin_simple ros packages.
