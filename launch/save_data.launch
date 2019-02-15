@@ -1,0 +1,39 @@
+<launch>
+  <arg name="Date" default="20190209" />
+  <arg name="Path" default="/home/qizhan/catkin_ws/src/vision_pose_estimation/record_data/" />
+
+  <!-- <arg name="record_pose_Calibration" default="true" /> -->
+  <arg name="record_pose_RealSense" default="true" />
+  <arg name="record_pose_Quad" default="true" />
+  <arg name="record_rgb" default="true" />
+  <arg name="record_depth" default="true" />
+
+ <node pkg="rosbag" type="record" name="rosbag_pose_RealSense"
+       args="record -o $(arg Path)/$(arg Date)/pose_RealSense /realsense/mavros/vision_pose/pose"
+       if="$(arg record_pose_RealSense)" />
+
+ <!-- <node pkg="rosbag" type="record" name="rosbag_pose_Calibration"
+       args="record -o $(arg Path)/$(arg Date)/pose_Calibration /camera_calibration/mavros/vision_pose/pose"
+       if="$(arg record_pose_Calibration)" /> -->
+
+ <node pkg="rosbag" type="record" name="rosbag_pose_Quad"
+       args="record -o $(arg Path)/$(arg Date)/pose_Quad /quad_realsense/mavros/vision_pose/pose"
+       if="$(arg record_pose_Quad)" />
+
+ <node pkg="rosbag" type="record" name="rosbag_rgb"
+       args="record -o $(arg Path)/$(arg Date)/rgb /camera/color/image_rect_color"
+       if="$(arg record_rgb)" />
+
+ <node pkg="rosbag" type="record" name="rosbag_depth"
+       args="record -o $(arg Path)/$(arg Date)/depth /camera/aligned_depth_to_color/image_raw"
+       if="$(arg record_depth)" />
+
+ <!-- <node pkg="rosbag" type="record" name="rosbag_rgb_compressed"
+       args="record -o $(arg Path)/$(arg Date)/depth_compressed /camera/color/image_rect_color/compressed"
+       if="$(arg record_rgb)" />
+
+ <node pkg="rosbag" type="record" name="rosbag_depth_compressed"
+       args="record -o $(arg Path)/$(arg Date)/rgb_compressed /camera/aligned_depth_to_color/image_raw/compressedDepth"
+       if="$(arg record_depth)" /> -->
+
+</launch>
