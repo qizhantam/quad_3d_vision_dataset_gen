@@ -1,5 +1,6 @@
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
+import numpy as np
 
 class image_processing():
     def __init__(self):
@@ -7,10 +8,14 @@ class image_processing():
 
     def convert_to_cv(self,image_msg):
         self.image_cv = self.cv_image.imgmsg_to_cv2(image_msg)
+        image = self.image_cv.copy()
+        self.image_cv = image
         return self.image_cv
 
     #Given coordinates and image, draw rectangle on image.
     def draw_rectangle(self,max_coords, min_coords):
+        min_coords = np.int32(min_coords)
+        max_coords = np.int32(max_coords)
         rect_top_left = (min_coords[0],min_coords[1])
         rect_bot_right = (max_coords[0],max_coords[1])
         cv2.rectangle(self.image_cv,rect_top_left,rect_bot_right,(0,0,255),3)

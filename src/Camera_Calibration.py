@@ -14,7 +14,7 @@ y_delta = x_delta
 
 x0 = -0.942589958080699+x_delta/2. #m
 y0 = 0.47854556109716095+y_delta/2. #m
-z0 = 0.021640986672089045 #m
+z0 = 0.021640986672089045-0.015 #m
 
 x1 = x0+8.*x_delta#m
 y1 = y0+8.*y_delta #m
@@ -44,7 +44,7 @@ grid3[:,:2]  = np.mgrid[y1:y0-y_delta/2.:-y_delta,x1:x0-x_delta/2.:-x_delta].T.r
 grid4[:,:2]  = np.mgrid[y1:y0-y_delta/2.:-y_delta,x1:x0-x_delta/2.:-x_delta].T.reshape(-1,2) #861
 grid5[:,:2]  = np.mgrid[x0:x1+x_delta/2.:x_delta,y1:y0-y_delta/2.:-y_delta].T.reshape(-1,2) #972
 grid6[:,:2]  = np.mgrid[x0:x1+x_delta/2.:x_delta,y1:y0-y_delta/2.:-y_delta].T.reshape(-1,2) #1043
-grid7[:,:2]  = np.mgrid[y1:y0-y_delta/2.:-y_delta,x1:x0-x_delta/2.:-dx_delta].T.reshape(-1,2) #1088
+grid7[:,:2]  = np.mgrid[y1:y0-y_delta/2.:-y_delta,x1:x0-x_delta/2.:-x_delta].T.reshape(-1,2) #1088
 
 grid8[:,:2]  = np.mgrid[y0:y1+y_delta/2.:y_delta,x0:x1+x_delta/2.:x_delta].T.reshape(-1,2) #1169
 grid9[:,:2]  = np.mgrid[y0:y1+y_delta/2.:y_delta,x0:x1+x_delta/2.:x_delta].T.reshape(-1,2) #1280
@@ -127,8 +127,6 @@ ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.sha
 print ret
 print mtx
 print dist
-print np.size(rvecs)
-print np.size(tvecs)
 
 mean_error = 0
 for i in xrange(len(objpoints)):
@@ -162,8 +160,8 @@ for topic_depth, msg_depth, t_depth in bag_depth.read_messages():
 
     # print rvecs[objpoints_candidates_index]
     t = tvecs[objpoints_candidates_index]
-    R2 = cv.Rodrigues(rvecs[objpoints_candidates_index])
-    R2 = R2[0]
+    R2, _ = cv.Rodrigues(rvecs[objpoints_candidates_index])
+    # R2 = R2[0]
     # print R2
 
     quaternion = (
@@ -179,10 +177,15 @@ for topic_depth, msg_depth, t_depth in bag_depth.read_messages():
          [msg_pose_RealSense.pose.position.y],
          [msg_pose_RealSense.pose.position.z]]) #Translation Matrix
 
-    # R_delta = np.dot(R2,np.linalg.inv(R))
-    R_delta = np.dot(R2,R)
+    R_delta = np.dot(R2.T,R)
     t_w = np.dot(R.T,-C)
-    t_delta = t-np.dot(R_delta,t_w)
-    print "R= ", R_delta
-    print "t= ", t_delta
+    t_delta = np.dot(R2.T,-t)-np.dot(R_delta,t_w)
+    # print "R= ", R_delta
+    # print "t= ", t_delta
     objpoints_candidates_index += 1
+
+
+    temp_origin = np.dot(R2.T,np.array([[x0],[y0],[z0]]))+np.dot(R2.T,-t)
+    # print np.true_divide(temp_origin,temp_origin[2])
+    temp_origin = np.dot(K,temp_origin)
+    print np.true_divide(temp_origin,temp_origin[2])
