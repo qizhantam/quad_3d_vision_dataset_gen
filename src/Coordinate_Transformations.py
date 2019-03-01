@@ -6,7 +6,7 @@ def vertex_coordinates(msg_pose_Quad,msg_pose_RealSense):
     #40x40x20cm
     half_length = 0.2 #m
     half_width = 0.2 #m
-    half_height = 0.2 #m
+    half_height = 0.1 #m
     ori_vertex_array = np.array([[ half_length, half_width, half_height],
                                  [ half_length, half_width,-half_height],
                                  [ half_length,-half_width,-half_height],
@@ -27,6 +27,7 @@ def vertex_coordinates(msg_pose_Quad,msg_pose_RealSense):
         [[msg_pose_Quad.pose.position.x],
          [msg_pose_Quad.pose.position.y],
          [msg_pose_Quad.pose.position.z]])
+    C_Quad = C_Quad + np.array([[0],[0],[0]])
 
     quaternion = (
         msg_pose_RealSense.pose.orientation.x,
@@ -47,13 +48,23 @@ def vertex_coordinates(msg_pose_Quad,msg_pose_RealSense):
          [0.0,            0.0,              1.0]]) #Intrinsic Parameters of Camera
 
     #Tuning
-    R_delta = np.array([[1,0,0],
-                        [0,0,1],
-                        [0,-1,0]])
-    R_delta = R_delta
-    C_delta = np.array([[0],
-                        [0],
-                        [0.]])
+    Angle = np.pi*90./180.
+    R_deltax = np.array([[1,0,0],
+                        [0,np.cos(Angle),-np.sin(Angle)],
+                        [0,np.sin(Angle),np.cos(Angle)]])
+
+    R_deltay = np.array([[-1,0,0],
+                        [0,1,0],
+                        [0,0,-1]])
+
+    R_delta = np.dot(R_deltay,R_deltax)
+    R_delta = R_delta.T
+    # R_delta = np.array([[1,0,0],
+                      # [0,0,-1],
+                      # [0,1,0]])
+
+
+    C_delta = np.array([[0.03],[-0.026],[-0.019]])
     t_delta = np.dot(R_delta,-C_delta)
     # R_delta = np.array([[-0.99152125,  0.11922477,  0.05168243],
     #                     [-0.01577827,  0.28432205, -0.95859899],
@@ -66,8 +77,10 @@ def vertex_coordinates(msg_pose_Quad,msg_pose_RealSense):
     vertex_pixels_array = np.zeros((8,2))
     for index in range(0,8):
         vertex[:3,0] = ori_vertex_array[index] #column vector, (x,y,z)
-        print vertex
         vertex = np.dot(R_Quad,vertex)+C_Quad
+        # vertex_pixels = np.dot(R_delta,np.dot(R_camera,vertex)+t_camera)+t_delta
+        # vertex_pixels = np.true_divide(vertex_pixels,vertex_pixels[2][0])
+        # vertex_pixels = np.dot(K_camera,vertex_pixels)
         vertex_pixels = np.dot(K_camera,np.dot(R_delta,np.dot(R_camera,vertex)+t_camera)+t_delta)
         vertex_pixels = np.true_divide(vertex_pixels,vertex_pixels[2][0])
         vertex_pixels_array[index,:2] = vertex_pixels[:2,0]

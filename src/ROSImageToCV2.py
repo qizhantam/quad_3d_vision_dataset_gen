@@ -2,7 +2,7 @@
 import cv2, rospy
 import Image_Processing
 import Save_to_Coco_Format
-from File_Operations import read_bag, save_image, closest_msg
+from File_Operations import read_bag, save_image, closest_msg, low_pass_filter, label_text
 from Coordinate_Transformations import vertex_coordinates
 
 def save_image_for_YOLO(image,max_coords,min_coords,bag_date,bag_type,bag_timestamp,file_postfix):
@@ -10,18 +10,22 @@ def save_image_for_YOLO(image,max_coords,min_coords,bag_date,bag_type,bag_timest
     directory = '../export_data/' + bag_date + '/YOLO_dataset/' + bag_timestamp + bag_type
 
 def main():
-    output_Video      = True
-    output_Video_type = "Rectangle" #Choose "Rectangle" or "Wireframe"
-    output_Rectangle  = True
-    output_Wireframe  = True
-    output_Coco       = True
+    output_Video      = False
+    output_Video_type = "Wireframe" #Choose "Rectangle" or "Wireframe"
+    output_Rectangle  = False
+    output_Wireframe  = False
+    output_NoDrawing  = True
+    output_Coco       = False
+    output_YOLO       = False
+    filter            = False
 
     file_postfix = 0
 
     #Update these for each separate recording
-    bag_date = '20190206'
-    bag_timestamp = '2019-02-06-22-42-24'
-    # bag_date = '20190209'
+    # bag_date = '20190206'
+    # bag_timestamp = '2019-02-06-22-42-24'
+    bag_date = '20190217'
+    bag_timestamp = '2019-02-17-01-07-30'
     # bag_timestamp = '2019-02-09-21-43-51'
 
     bag_directory = '../record_data/' + bag_date
@@ -33,10 +37,16 @@ def main():
 
     save_image_Rectangle_directory = '../export_data/' + bag_date + '/drawn_Rectangle/' + bag_timestamp
     save_image_Wireframe_directory = '../export_data/' + bag_date + '/drawn_Wireframe/' + bag_timestamp
+    save_image_NoDrawing_directory = '../export_data/' + bag_date + '/Unedited/' + bag_timestamp
     save_image_Coco_directory = '../export_data/' + bag_date + '/Coco/' + bag_timestamp
+    save_label_text_directory = '../export_data/' + bag_date + '/Labels/' + bag_timestamp
+    save_image_Yolo_directory = '../export_data/' + bag_date + '/Yolo/' + bag_timestamp
     videoName = '../export_data/' + bag_date + '/' + bag_timestamp + '_video.mp4'
 
-
+    fc = 100 #Hz, Cutoff frequency for low-pass filter
+    alpha = 1./(1.+30./(fc*3.142))
+    if filter == True:
+        bag_pose_Quad = low_pass_filter(alpha,bag_date,bag_timestamp,bag_directory,'pose_Quad')
 
     if output_Rectangle == True:
         cv_depth_Rectangle = Image_Processing.image_processing()
@@ -44,6 +54,9 @@ def main():
     if output_Wireframe == True:
         cv_depth_Wireframe = Image_Processing.image_processing()
         cv_rgb_Wireframe   = Image_Processing.image_processing()
+    if output_NoDrawing == True:
+        cv_depth_NoDrawing = Image_Processing.image_processing()
+        cv_rgb_NoDrawing   = Image_Processing.image_processing()
     if output_Coco == True:
         cv_depth_Coco = Image_Processing.image_processing()
         cv_rgb_Coco   = Image_Processing.image_processing()
@@ -78,6 +91,9 @@ def main():
             cv_depth_Wireframe.draw_wireframe(vertex_coords)
             cv_rgb_Wireframe.draw_wireframe(vertex_coords)
             # cv_rgb_Wireframe.draw_rectangle(image,max_coords,min_coords)
+        if output_NoDrawing == True:
+            cv_depth_NoDrawing.convert_to_cv(msg_depth)
+            cv_rgb_NoDrawing.convert_to_cv(msg_rgb)
         if output_Coco == True:
             cv_depth_Coco.convert_to_cv(msg_depth)
             cv_rgb_Coco.convert_to_cv(msg_rgb)
@@ -89,6 +105,11 @@ def main():
         if output_Wireframe == True:
             save_image(cv_depth_Wireframe,save_image_Wireframe_directory,'depth',file_postfix)
             save_image(cv_rgb_Wireframe  ,save_image_Wireframe_directory,'rgb'  ,file_postfix)
+        if output_NoDrawing == True:
+            depth_filename = save_image(cv_depth_NoDrawing,save_image_NoDrawing_directory,'depth',file_postfix)
+            rgb_filename = save_image(cv_rgb_NoDrawing    ,save_image_NoDrawing_directory,'rgb'  ,file_postfix)
+            label_text(save_label_text_directory, file_postfix, max_coords, min_coords, 'depth')
+            label_text(save_label_text_directory, file_postfix, max_coords, min_coords, 'rgb')
         if output_Video == True:
             if output_Video_type == "Wireframe":
                 video.write(cv_rgb_Wireframe.image_cv)

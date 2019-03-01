@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>vision_pose_estimation</name>
+  <name>quad_dataset_gen</name>
   <version>0.0.0</version>
-  <description>The vision_pose_estimation package</description>
+  <description>The quad_dataset_gen package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

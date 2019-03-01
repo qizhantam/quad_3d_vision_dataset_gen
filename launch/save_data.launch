@@ -1,6 +1,6 @@
 <launch>
-  <arg name="Date" default="20190209" />
-  <arg name="Path" default="/home/qizhan/catkin_ws/src/vision_pose_estimation/record_data/" />
+  <arg name="Date" default="20190218" />
+  <arg name="Path" default="/home/qizhan/catkin_ws/src/quad_dataset_gen/record_data/" />
 
   <!-- <arg name="record_pose_Calibration" default="true" /> -->
   <arg name="record_pose_RealSense" default="true" />
