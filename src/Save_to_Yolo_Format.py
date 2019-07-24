@@ -1,10 +1,11 @@
 
-## Heavily modified from: https://github.com/hazirbas/coco-json-converter/blob/master/generate_coco_json.py
+# Heavily modified from: https://github.com/hazirbas/coco-json-converter/blob/master/generate_coco_json.py
 
 import os
 import numpy as np
 from os import walk
 from File_Operations import copy_image, label_text
+from ROSImageToCV2 import load_bag_date_timestamp
 
 def Yolo_bbox_params(max_coords,min_coords,x_max_width,y_max_width):
     max_coords[0] = max_coords[0]/x_max_width
@@ -16,8 +17,7 @@ def Yolo_bbox_params(max_coords,min_coords,x_max_width,y_max_width):
     return center_coords, width_coords
 
 def main():
-    bag_date = '20190217'
-    bag_timestamp = '2019-02-17-01-07-30'
+    bag_date, bag_timestamp = load_bag_date_timestamp()
     save_image_Yolo_directory = '../export_data/' + bag_date + '/Yolo/' + bag_timestamp
     # save_label_text_directory = '../export_data/' + bag_date + '/Labels/' + bag_timestamp
     labels_directory          = '../export_data/' + bag_date + '/Labels/' + bag_timestamp
@@ -47,7 +47,7 @@ def main():
         max_coords[1] = float(rgb_num[2])
         min_coords[0] = float(rgb_num[3])
         min_coords[1] = float(rgb_num[4])
-        center_coords, width_coords = Yolo_bbox_params(max_coords,min_coords,480.,640.)
+        center_coords, width_coords = Yolo_bbox_params(max_coords,min_coords,640.,480.)
 
         label_text(save_image_Yolo_directory, int(file_postfix), center_coords, width_coords, 'depth')
         label_text(save_image_Yolo_directory, int(file_postfix), center_coords, width_coords, 'rgb')

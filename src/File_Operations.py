@@ -21,12 +21,11 @@ def low_pass_filter(alpha,bag_date,bag_timestamp,bag_directory,bag_type):
             oy_0 = first_order_filter(oy_0,msg.pose.orientation.y,alpha)
             oz_0 = first_order_filter(ow_0,msg.pose.orientation.z,alpha)
             ow_0 = first_order_filter(oz_0,msg.pose.orientation.w,alpha)
-        # print alpha, msg.pose.orientation.x
+
         msg.pose.orientation.x = ox_0
         msg.pose.orientation.y = oy_0
         msg.pose.orientation.z = oz_0
         msg.pose.orientation.w = ow_0
-        # print msg.pose.orientation
         outbag.write(topic,msg,t)
         i += 1
     return outbag
@@ -45,14 +44,14 @@ def copy_image(image_file,save_directory,image_type,file_postfix_png):
       os.makedirs(directory)
     copyfile(image_file,directory + "/" + image_type + "_" + file_postfix_png)
 
-def closest_msg(t_compare,t_start,t_end,bag):
+def closest_msg(t_compare,t_start,t_end,bag,lag=0):
     #initialize with something ridiculous
     t_diff_old = rospy.Duration(-10000)
     t_old = rospy.Duration(-10000)
 
     #parse though the bag to find the message that matches most closely to input time
     for topic, msg, t in bag.read_messages(start_time=t_start,end_time=t_end):
-        t_diff = t - t_compare
+        t_diff = t - t_compare + rospy.Duration(lag)
         if t_diff_old<=rospy.Duration(0) and t_diff>=rospy.Duration(0):
             if abs(t_diff_old)>abs(t_diff):
                 continue

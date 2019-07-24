@@ -1,0 +1,6 @@
+classes= 1  
+train  = /home/qizhan/catkin_ws/src/quad_dataset_gen/src/Yolo/train.txt 
+test  = /home/qizhan/catkin_ws/src/quad_dataset_gen/src/Yolo/train.txt
+valid  = /home/qizhan/catkin_ws/src/quad_dataset_gen/src/Yolo/train.txt
+names = cfg/obj.names  
+backup = backup/

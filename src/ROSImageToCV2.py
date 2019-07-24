@@ -5,28 +5,24 @@ import Save_to_Coco_Format
 from File_Operations import read_bag, save_image, closest_msg, low_pass_filter, label_text
 from Coordinate_Transformations import vertex_coordinates
 
-def save_image_for_YOLO(image,max_coords,min_coords,bag_date,bag_type,bag_timestamp,file_postfix):
-    #WARNING: Work in progress...
-    directory = '../export_data/' + bag_date + '/YOLO_dataset/' + bag_timestamp + bag_type
+def load_bag_date_timestamp():
+    bag_date = '20190309'
+    bag_timestamp = '2019-03-09-12-19-21'
+    return bag_date, bag_timestamp
 
 def main():
     output_Video      = False
-    output_Video_type = "Wireframe" #Choose "Rectangle" or "Wireframe"
-    output_Rectangle  = False
+    output_Video_type = "Unedited" #Choose "Rectangle" or "Wireframe" or "Unedited"
+    output_Rectangle  = True
     output_Wireframe  = False
     output_NoDrawing  = True
     output_Coco       = False
-    output_YOLO       = False
     filter            = False
 
     file_postfix = 0
 
     #Update these for each separate recording
-    # bag_date = '20190206'
-    # bag_timestamp = '2019-02-06-22-42-24'
-    bag_date = '20190217'
-    bag_timestamp = '2019-02-17-01-07-30'
-    # bag_timestamp = '2019-02-09-21-43-51'
+    bag_date, bag_timestamp = load_bag_date_timestamp()
 
     bag_directory = '../record_data/' + bag_date
     bag_depth = read_bag(bag_date,bag_timestamp,bag_directory,'depth')
@@ -40,8 +36,8 @@ def main():
     save_image_NoDrawing_directory = '../export_data/' + bag_date + '/Unedited/' + bag_timestamp
     save_image_Coco_directory = '../export_data/' + bag_date + '/Coco/' + bag_timestamp
     save_label_text_directory = '../export_data/' + bag_date + '/Labels/' + bag_timestamp
-    save_image_Yolo_directory = '../export_data/' + bag_date + '/Yolo/' + bag_timestamp
     videoName = '../export_data/' + bag_date + '/' + bag_timestamp + '_video.mp4'
+    videoName_depth = '../export_data/' + bag_date + '/' + bag_timestamp + '_depth_video.mp4'
 
     fc = 100 #Hz, Cutoff frequency for low-pass filter
     alpha = 1./(1.+30./(fc*3.142))
@@ -65,38 +61,42 @@ def main():
     if output_Video == True:
         videoName = '../export_data/' + bag_date + '/' + bag_timestamp + '_video.mp4'
         fourcc = cv2.VideoWriter_fourcc(*'X264')
-        video  = cv2.VideoWriter(videoName,fourcc,30.0,(640,480))
+        video  = cv2.VideoWriter(videoName,fourcc,60.0,(640,480))
+        video_depth = cv2.VideoWriter(videoName_depth,fourcc,60.0,(640,480))
 
     # print cv_depth_Rectangle == cv_depth_Coco
     for topic_depth, msg_depth, t_depth in bag_depth.read_messages():
-        t_start = t_depth-rospy.Duration(0.1)
+        t_start = t_depth-rospy.Duration(0.3)
         t_end   = t_depth+rospy.Duration(0.1)
+        t_start_rgb = t_depth-rospy.Duration(0.1)
+        t_end_rgb = t_depth+rospy.Duration(0.1)
         ## Get messages with timestamps closest to the depth's message
-        msg_rgb, t_rgb                       = closest_msg(t_depth, t_start, t_end, bag_rgb)
-        msg_pose_RealSense, t_pose_RealSense = closest_msg(t_depth, t_start, t_end, bag_pose_RealSense)
-        msg_pose_Quad, t_pose_Quad           = closest_msg(t_depth, t_start, t_end, bag_pose_Quad)
+        rgb_lag_time = 0.2 #compensate how far behind is rgb's actual timestamp vs. pose timestamp
+        msg_rgb, t_rgb                       = closest_msg(t_depth, t_start, t_end, bag_rgb, 0.)
+        msg_pose_RealSense, t_pose_RealSense = closest_msg(t_depth, t_start, t_end, bag_pose_RealSense, rgb_lag_time)
+        msg_pose_Quad, t_pose_Quad           = closest_msg(t_depth, t_start, t_end, bag_pose_Quad, rgb_lag_time)
 
         ## Find projected pixel coordinates
         vertex_coords, max_coords, min_coords = vertex_coordinates(msg_pose_Quad,msg_pose_RealSense)
 
         ## Draw rectangle on images in opencv
         if output_Rectangle == True:
-            cv_depth_Rectangle.convert_to_cv(msg_depth)
-            cv_rgb_Rectangle.convert_to_cv(msg_rgb)
+            cv_depth_Rectangle.convert_to_cv(msg_depth,"depth")
+            cv_rgb_Rectangle.convert_to_cv(msg_rgb,"rgb")
             cv_depth_Rectangle.draw_rectangle(max_coords,min_coords)
             cv_rgb_Rectangle.draw_rectangle(max_coords,min_coords)
         if output_Wireframe == True:
-            cv_depth_Wireframe.convert_to_cv(msg_depth)
-            cv_rgb_Wireframe.convert_to_cv(msg_rgb)
+            cv_depth_Wireframe.convert_to_cv(msg_depth,"depth")
+            cv_rgb_Wireframe.convert_to_cv(msg_rgb,"rgb")
             cv_depth_Wireframe.draw_wireframe(vertex_coords)
             cv_rgb_Wireframe.draw_wireframe(vertex_coords)
             # cv_rgb_Wireframe.draw_rectangle(image,max_coords,min_coords)
         if output_NoDrawing == True:
-            cv_depth_NoDrawing.convert_to_cv(msg_depth)
-            cv_rgb_NoDrawing.convert_to_cv(msg_rgb)
+            cv_depth_NoDrawing.convert_to_cv(msg_depth,"depth")
+            cv_rgb_NoDrawing.convert_to_cv(msg_rgb,"rgb")
         if output_Coco == True:
-            cv_depth_Coco.convert_to_cv(msg_depth)
-            cv_rgb_Coco.convert_to_cv(msg_rgb)
+            cv_depth_Coco.convert_to_cv(msg_depth,"depth")
+            cv_rgb_Coco.convert_to_cv(msg_rgb,"rgb")
 
         ## Save images
         if output_Rectangle == True:
@@ -113,15 +113,16 @@ def main():
         if output_Video == True:
             if output_Video_type == "Wireframe":
                 video.write(cv_rgb_Wireframe.image_cv)
-            else: #default choice is Rectangle
+            elif output_Video_type == "Rectangle": #default choice is Rectangle
                 video.write(cv_rgb_Rectangle.image_cv)
+            elif output_Video_type == "Rectangle":
+                video_depth.write(cv_depth_NoDrawing.image_cv)
+                video.write(cv_rgb_NoDrawing.image_cv)
         if output_Coco == True:
             depth_filename = save_image(cv_depth_Coco,save_image_Coco_directory,'depth',file_postfix)
             rgb_filename   = save_image(cv_rgb_Coco  ,save_image_Coco_directory,'rgb'  ,file_postfix)
             depth_annotation_Coco.image_annotation(file_postfix, depth_filename, max_coords, min_coords)
             rgb_annotation_Coco.image_annotation(file_postfix, rgb_filename, max_coords, min_coords)
-        # save_image_for_YOLO(cv_depth,max_coords,min_coords,bag_date,bag_timestamp,'depth',file_postfix)
-        # save_image_for_YOLO(cv_rgb,max_coords,min_coords,bag_date,bag_timestamp,'rgb',file_postfix)
         file_postfix += 1
 
     if output_Coco == True:
