@@ -1,5 +1,5 @@
 # quad_dataset_gen
-Generating labeled 3D vision dataset for quadrotor pose detection. This repository contains the revamped code used for the first half of my Winter 2019's AA290 project with a ton of help from Eric Cristofalo and Zijian Wang. The project report "AA290_WinterReport.pdf" is included and I hope it will help describe the application of this repository. Please don't hesitate to contact me for any questions or bugs.
+Generating labeled 3D vision dataset for quadrotor pose detection. This repository contains the revamped code used for the first half of my Winter 2019's AA290 project with a ton of help from Eric Cristofalo and Zijian Wang. The project report [AA290_WinterReport.pdf](AA290_WinterReport.pdf) is included and I hope it will help describe the application of this repository. Please don't hesitate to contact me for any questions or bugs.
 
 ## Sections
 1. [Installing Dependencies](#installing-dependencies)
