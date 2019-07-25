@@ -77,9 +77,9 @@ For example, when launched, the default path where the rosbags will be saved is:
 	```
 
 ## Training on Yolo
-0. Note: As the weight file "darknet53.conv.74" and "yolov3_3700.weights" exceeds github file size limits, I've uploaded it and the trained weights file to the MSL google drive. Download those 2 files and put them in /src/Yolo/weights/. Make sure to change the directories in /src/Yolo/cfg/obj.data.
+0. Note: As the untrained weights "darknet53.conv.74" and trained weights "yolov3_3700.weights" exceed github file size limits, I've uploaded them to the MSL google drive. Download these 2 files and put them in /src/Yolo/weights/. Make sure to change the directories in /src/Yolo/cfg/obj.data.
 
-1. This will require install and desired training method of Yolo. Just as an example, in the darknet folder (where I installed Yolo), I would type:
+1. This will require installation of Yolo. As an example, in the darknet folder (where I installed Yolo), I would type:
 	```
 	./darknet detector train /home/qizhan/catkin_ws/src/quad_dataset_gen/src/Yolo/cfg/obj.data /home/qizhan/catkin_ws/src/quad_dataset_gen/src/Yolo/cfg/yolov3_train.cfg /home/qizhan/catkin_ws/src/quad_dataset_gen/src/Yolo/weights/darknet53.conv.74
 	```
