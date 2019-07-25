@@ -42,7 +42,7 @@ These steps may be different for you depending on your installation configuratio
 
 5. (Optional, for calibration/debugging of transformation matrices.)
 
- To view the drawn wireframe bounding box:
+ 	To view the drawn wireframe bounding box:
 	```
 	rosrun quad_dataset_gen Live_Visualization.py
 	```
@@ -53,7 +53,7 @@ These steps may be different for you depending on your installation configuratio
 	```
 	roslaunch quad_dataset_gen save_data.launch
 	```
-For example, when launched, the default path where the rosbags will be saved is: /home/qizhan/catkin_ws/src/quad_dataset_gen/record_data/20190309.
+	For example, when launched, the default path where the rosbags will be saved is: /home/qizhan/catkin_ws/src/quad_dataset_gen/record_data/20190309.
 
 ## Data Annotation for Training
 ### Bounding box verification
