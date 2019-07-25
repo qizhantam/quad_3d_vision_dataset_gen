@@ -24,7 +24,7 @@ These steps may be different for you depending on your installation configuratio
 	```
 	roslaunch realsense2_camera rs_rgbd.launch
 	```
-3. Copy vrpn_quad_realsense.launch and vrpn_realsense.launch to the ros_vrpn_client launch folder. Note: Make sure that the rostopics are correct, "vrpn_name" corresponds to the asset name in Motive Tracker and "robot_ns" is the same name as the ros nodes to be saved.
+3. Copy `vrpn_quad_realsense.launch` and `vrpn_realsense.launch` to the `ros_vrpn_client` launch folder. Note: Make sure that the rostopics are correct, `vrpn_name` corresponds to the asset name in Motive Tracker and `robot_ns` is the same name as the ros nodes to be saved.
 
 	Terminals 3 & 4:
 	```
@@ -53,51 +53,48 @@ These steps may be different for you depending on your installation configuratio
 	```
 	roslaunch quad_dataset_gen save_data.launch
 	```
-	For example, when launched, the default path where the rosbags will be saved is: /home/qizhan/catkin_ws/src/quad_dataset_gen/record_data/20190309.
+	For example, when launched, the default path where the rosbags will be saved is: `/home/qizhan/catkin_ws/src/quad_dataset_gen/record_data/20190309`.
 
 ## Data Annotation for Training
 ### Bounding box verification
-1. Export the ros rgb messages to OpenCV format and draw the bounding boxes using the recorded pose data of the camera and quad. In ROSImageToSC2.py, under the function load_bag_date_timestamp, check that bag_date is the folder where the data is saved, and bag_timestamp is the timestamp appended to the end of the bag files.
+1. Export the ros rgb messages to OpenCV format and draw the bounding boxes using the recorded pose data of the camera and quad. In `ROSImageToSC2.py`, under the function `load_bag_date_timestamp`, check that bag_date is the folder where the data is saved, and bag_timestamp is the timestamp appended to the end of the bag files.
 
 	```
 	python ROSImageToCV2.py
 	```
-	The default settings exports frames with and without rectangular bounding boxes along with the coordinates to the /export_data directory. You can also output videos, draw 3D bounding boxes ("Wireframe"), output Coco annotated files by changing the settings.
+	The default settings exports frames with and without rectangular bounding boxes along with the coordinates to the `/export_data` directory. You can also output videos, draw 3D bounding boxes (`Wireframe`), output Coco annotated files by changing the settings.
 
-2. Go to the directory where the drawn rgb images are located (export_data/20190309/drawn_Rectangle/2019-03-09-12-19-21_rgb/) and delete any images that have poor bounding boxes drawn. This will remove the images from the next step.
+2. Go to the directory where the drawn rgb images are located (`export_data/20190309/drawn_Rectangle/2019-03-09-12-19-21_rgb/`) and delete any images that have poor bounding boxes drawn. This will remove the images from the next step.
 
 ### Export annotation for YOLO training
-1. The verified images and their label text files can then be saved to a folder "Yolo" in the /export_data directory:
+1. The verified images and their label text files can then be saved to a folder `Yolo` in the `/export_data` directory:
 	```
 	python Save_to_Yolo_Format.py
 	```
-2. Adjust the train to test ratio in Yolo_Train_Test_List.py. Running the script will create train.txt and test.txt files in the directory /src/Yolo/:
+2. Adjust the train to test ratio in `Yolo_Train_Test_List.py`. Running the script will create `train.txt` and `test.txt` files in the directory `/src/Yolo/`:
 	```
 	python Yolo_Train_Test_List.py
 	```
 
 ## Training on Yolo
-0. Note: As the untrained weights "darknet53.conv.74" and trained weights "yolov3_3700.weights" exceed github file size limits, I've uploaded them to the MSL google drive. Download these 2 files and put them in /src/Yolo/weights/. Make sure to change the directories in /src/Yolo/cfg/obj.data.
+0. Note: As the untrained weights `darknet53.conv.74` and trained weights `yolov3_3700.weights` exceed github file size limits, I've uploaded them to the MSL google drive. Download these 2 files and put them in `/src/Yolo/weights/`. Make sure to change the directories in `/src/Yolo/cfg/obj.data`.
 
 1. This will require installation of Yolo. As an example, in the darknet folder (where I installed Yolo), I would type:
 	```
 	./darknet detector train /home/qizhan/catkin_ws/src/quad_dataset_gen/src/Yolo/cfg/obj.data /home/qizhan/catkin_ws/src/quad_dataset_gen/src/Yolo/cfg/yolov3_train.cfg /home/qizhan/catkin_ws/src/quad_dataset_gen/src/Yolo/weights/darknet53.conv.74
 	```
-	cfg.data and yolov3.cfg are modified files from the darknet/Yolo folder. You can find the files and more under /quad_dataset_gen/src/Yolo/.
+	`cfg.data` and `yolov3.cfg` are modified files from the darknet/Yolo folder. You can find the files and more under `/quad_dataset_gen/src/Yolo/`.
 
-2. As only a small sample of the dataset is included with this repository, the trained weights on the quad dataset is included in /quad_dataset_gen/src/Yolo/ as yolov3_3700.weights.
+2. As only a small sample of the dataset is included with this repository, the trained weights on the quad dataset is included in `/quad_dataset_gen/src/Yolo/` as `yolov3_3700.weights`.
 
 ## Tracking a Drone (post-processing)
-0. Note: "yolov3_3700.weights" is required to be in /src/Yolo/weights/, see [Training on YOLO](#training-on-yolo). Make sure to change the directories in /src/Yolo/cfg/obj.data.
+0. Note: `yolov3_3700.weights` is required to be in `/src/Yolo/weights/`, see [Training on YOLO](#training-on-yolo). Make sure to change the directories in `/src/Yolo/cfg/obj.data`.
 
-1. Going back to quad_dataset_gen/src/, we do a forward pass on all the images using the trained weights and save the detected bounding boxes and a video of them in /src/Yolo/results/:
+1. Going back to `quad_dataset_gen/src/`, we do a forward pass on all the images using the trained weights and save the detected bounding boxes and a video of them in `/src/Yolo/results/`:
 	```
 	python Save_Yolo_Ouput_Images.py
 	```
-	*Check or modify the directory paths and commands specified in the script, especially what goes into "darknet_yolo_directory". Make sure to edit Line 48 of "darknet.py" to have the correct file directory of "libdarknet.so", usually found in the installation Yolo's installation directory, "darknet", e.g.: 
-	```
-	lib = CDLL("/home/qizhan/darknet/libdarknet.so", RTLD_GLOBAL)
-	```
+	***Check or modify the directory paths and commands specified in the script, especially what goes into `darknet_yolo_directory`. Make sure to edit Line 48 of `darknet.py` to have the correct file directory of `libdarknet.so`, usually found in the installation Yolo's installation directory, `darknet`, e.g.: `lib = CDLL("/home/qizhan/darknet/libdarknet.so", RTLD_GLOBAL)`
 
 2. Now we can finally run the detected bounding boxes through an EKF to see how well we can track the quad's pose.
 	```
