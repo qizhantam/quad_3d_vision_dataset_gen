@@ -94,7 +94,10 @@ For example, when launched, the default path where the rosbags will be saved is:
 	```
 	python Save_Yolo_Ouput_Images.py
 	```
-	*Check or modify the directory paths and commands specified in the script, especially what goes into "darknet_yolo_directory". Make sure to edit Line 48 of "darknet.py" to have the correct file directory of "libdarknet.so", usually found in the installation Yolo's installation directory, "darknet". e.g. lib = CDLL("/home/qizhan/darknet/libdarknet.so", RTLD_GLOBAL)
+	*Check or modify the directory paths and commands specified in the script, especially what goes into "darknet_yolo_directory". Make sure to edit Line 48 of "darknet.py" to have the correct file directory of "libdarknet.so", usually found in the installation Yolo's installation directory, "darknet". e.g. 
+	```
+	lib = CDLL("/home/qizhan/darknet/libdarknet.so", RTLD_GLOBAL)
+	```
 
 2. Now we can finally run the detected bounding boxes through an EKF to see how well we can track the quad's pose.
 	```
