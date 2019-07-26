@@ -87,7 +87,8 @@ These steps may be different for you depending on your installation configuratio
 
 2. As only a small sample of the dataset is included with this repository, the trained weights on the quad dataset is included in `/quad_dataset_gen/src/Yolo/` as `yolov3_3700.weights`.
 
-## Tracking a Drone (post-processing)
+## Tracking a Drone 
+### Post-Processing
 0. Note: `yolov3_3700.weights` is required to be in `/src/Yolo/weights/`, see [Training on YOLO](#training-on-yolo). Make sure to change the directories in `/src/Yolo/cfg/obj.data`.
 
 1. Going back to `quad_dataset_gen/src/`, we do a forward pass on all the images using the trained weights and save the detected bounding boxes and a video of them in `/src/Yolo/results/`:
@@ -101,3 +102,5 @@ These steps may be different for you depending on your installation configuratio
 	python Tracking.py
 	```
 	When it's done running, a plot window should pop-up displaying the comparison between the ground truth and the EKF's predictions. A video of the quad with the EKF's predicted bounding box drawn over it should also be automatically saved in the export folder. There are also lines in Tracking.py that you can uncomment to record the animation of the plot in real time.
+
+### Live-Processing (Coming soon!)
