@@ -1,0 +1,8 @@
+*.png
+*.mp4
+*.txt
+/tmp
+*.zip
+*.bag
+*.pyc
+yolov3_3700.weights

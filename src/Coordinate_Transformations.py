@@ -3,13 +3,17 @@ import tf
 
 def Transforms():
     #NOTE: Tune dimensions of the bounding box
-    l = 0.44*1.2
-    w = 0.44*1.2
-    h = 0.2*1.2
+    # l = 0.44*1.2
+    # w = 0.44*1.2
+    # h = 0.2*1.2
+    l = 0.27*1.2
+    w = 0.27*1.2
+    h = 0.13*1.2
     #NOTE: Manual Calibration: camera->image transformation
-    Angle_x = np.pi*89.2/180.
+    Angle_x = np.pi*83.8/180.
+    # Angle_x = np.pi*89.2/180.
     Angle_y = np.pi*90./180.
-    Angle_z = np.pi*90./180.
+    Angle_z = np.pi*89.2/180.
     #NOTE: Manual Calibration: Center offset of Quad rigid body
     translation_offset = np.array([[0],[0],[0.03]])
 

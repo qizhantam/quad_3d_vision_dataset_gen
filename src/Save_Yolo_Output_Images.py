@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import glob
 import PIL
@@ -6,6 +7,7 @@ import cv2
 import numpy as np
 from ROSImageToCV2 import load_bag_date_timestamp
 from natsort import natsorted
+import pdb
 
 # function to draw bounding box on the detected object with class name
 def draw_bounding_box(img, confidence, x, y, x_plus_w, y_plus_h):
@@ -19,7 +21,7 @@ def draw_bounding_box(img, confidence, x, y, x_plus_w, y_plus_h):
     img = cv2.putText(img, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
     return img
 
-darknet_yolo_directory = '/home/qizhan/darknet' #TODO: Make sure to change this
+darknet_yolo_directory = '/home/awc11/Documents/darknet' #TODO: Make sure to change this
 
 bag_date, bag_timestamp = load_bag_date_timestamp()
 
@@ -34,6 +36,7 @@ yolov3_file = cfg_directory + '/yolov3_valid.cfg'
 yolov3_file = os.path.abspath(yolov3_file)
 
 weights_file = './Yolo/weights/yolov3_3700.weights'
+# weights_file = './Yolo/weights/yolov3_330000.weights'
 weights_file = os.path.abspath(weights_file)
 
 unedited_directory  = '../export_data/' + bag_date + '/Unedited/' + bag_timestamp
@@ -46,9 +49,11 @@ results_image = results_directory
 results_file = results_directory + '/results_' + bag_timestamp + '.txt'
 results_darknet_file = darknet_yolo_directory + '/results/comp4_det_test_' + 'Quad' + '.txt'
 
+
 os.chdir(darknet_yolo_directory)
 commands = './darknet detector valid ' + obj_data_file + ' ' + yolov3_file + ' ' + weights_file
 os.system(commands)
+
 
 results_out_of_order_func = open(results_darknet_file,'r')
 results_out_of_order = results_out_of_order_func.readlines()
@@ -58,6 +63,7 @@ results_func = open(results_file,'w')
 for result in results_in_order:
     results_func.write(result)
 results_func.close()
+
 
 videoName = results_directory + '/' + bag_timestamp + '_video.mp4'
 fourcc = cv2.VideoWriter_fourcc(*'X264')
@@ -70,8 +76,9 @@ image_filename_old = "initialize"
 confidence_old = -1000
 for line in results_in_order:
     (image_filename,confidence,min_x,min_y,max_x,max_y) = line.split(" ")
-    print image_filename
+    print(image_filename, end='')
     confidence = float(confidence)
+    print("   {:.4f}".format(confidence))
     if (image_filename != image_filename_old) and (image_filename_old != "initialize"):
         cv2.imwrite(filename,img)
         video.write(img)
