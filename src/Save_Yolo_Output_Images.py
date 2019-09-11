@@ -6,7 +6,7 @@ import PIL.Image as Image
 import cv2
 import numpy as np
 from ROSImageToCV2 import load_bag_date_timestamp
-from natsort import natsorted
+from natsort import natsorted    
 import pdb
 
 # function to draw bounding box on the detected object with class name
@@ -42,8 +42,13 @@ weights_file = os.path.abspath(weights_file)
 unedited_directory  = '../export_data/' + bag_date + '/Unedited/' + bag_timestamp
 unedited_directory = os.path.abspath(unedited_directory)
 
-results_directory = './Yolo/results'
+label_directory = '../export_data/' + bag_date + '/Labels/' + bag_timestamp
+unedited_directory = os.path.abspath(unedited_directory)
+
+results_directory = './Yolo/results/results_' + bag_timestamp
 results_directory = os.path.abspath(results_directory)
+if not os.path.exists(results_directory):
+    os.makedirs(results_directory)
 
 results_image = results_directory
 results_file = results_directory + '/results_' + bag_timestamp + '.txt'
@@ -72,6 +77,10 @@ video  = cv2.VideoWriter(videoName,fourcc,15.0,(640,480))
 d = 0
 image_List = []
 
+saved_yolo_images_dir = results_directory + '/rbg_with_yolo_bb'
+if not os.path.exists(saved_yolo_images_dir):
+    os.makedirs(saved_yolo_images_dir)
+
 image_filename_old = "initialize"
 confidence_old = -1000
 for line in results_in_order:
@@ -88,7 +97,8 @@ for line in results_in_order:
         img = cv2.imread(unedited_directory + "_rgb/" + image_filename + ".png")
 
         img = draw_bounding_box(img, confidence, min_x, min_y, max_x, max_y)
-        filename = results_image + '/' + image_filename + '.png'
+        filename = saved_yolo_images_dir + '/' + image_filename + '.png'
+        # filename = results_image + '/' + image_filename + '.png'
         cv2.imwrite(filename,img)
         image_filename_old = image_filename
         confidence_old = confidence

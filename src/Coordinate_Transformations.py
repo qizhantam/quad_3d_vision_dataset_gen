@@ -2,22 +2,43 @@ import numpy as np
 import tf
 
 def Transforms():
-    #NOTE: Tune dimensions of the bounding box
-    # l = 0.44*1.2
-    # w = 0.44*1.2
-    # h = 0.2*1.2
-    l = 0.27*1.2
-    w = 0.27*1.2
-    h = 0.13*1.2
-    #NOTE: Manual Calibration: camera->image transformation
-    Angle_x = np.pi*83.8/180.
-    # Angle_x = np.pi*89.2/180.
-    Angle_y = np.pi*90./180.
-    Angle_z = np.pi*89.2/180.
-    #NOTE: Manual Calibration: Center offset of Quad rigid body
-    translation_offset = np.array([[0],[0],[0.03]])
+    b_use_original = True
+    if b_use_original:
+        #NOTE: Tune dimensions of the bounding box
+        l = 0.44*1.2
+        w = 0.44*1.2
+        h = 0.2*1.2
+
+        #NOTE: Manual Calibration: camera->image transformation
+        Angle_x = np.pi*89.2/180.  # this changes the vertical angle of the camera
+        Angle_y = np.pi*90./180.
+        Angle_z = np.pi*90/180.  # this changes the side-to-side angle of the camera
+
+        Angle_x = np.pi*83.8/180.  #Run 3??
+        Angle_y = np.pi*90./180.
+        Angle_z = np.pi*89.2/180.  # this changes the side-to-side angle of the camera
 
 
+        #NOTE: Manual Calibration: Center offset of Quad rigid body
+        translation_offset = np.array([[0],[0],[0.03]])
+        
+        C_delta = np.array([[0.026],[0.03],[-0.019]])
+    else:
+        #NOTE: Tune dimensions of the bounding box
+        l = 0.27*1.2
+        w = 0.27*1.2
+        h = 0.13*1.2
+        #NOTE: Manual Calibration: camera->image transformation
+        # Angle_x = np.pi*83.5/180.  # this changes the vertical angle of the camera
+        Angle_x = np.pi*83.8/180.  #Run 3??
+        Angle_y = np.pi*90./180.
+        Angle_z = np.pi*89.2/180.  # this changes the side-to-side angle of the camera
+
+        #NOTE: Manual Calibration: Center offset of Quad rigid body
+        translation_offset = np.array([[0],[0],[0.03]])
+        
+        C_delta = np.array([[0.026],[0.03],[-0.019]])
+    
 
     half_length = l/2.
     half_width  = w/2.
@@ -34,7 +55,6 @@ def Transforms():
                          [ np.sin(Angle_z) , np.cos(Angle_z) , 0.               ],
                          [ 0.              , 0.              , 1.               ]])
     R_delta = np.dot(R_deltax,R_deltaz)
-    C_delta = np.array([[0.026],[0.03],[-0.019]])
     t_cam_to_image = np.dot(R_delta.T,-C_delta)
     T_cam_to_image = np.eye(4)
     T_cam_to_image[0:3,0:3] = R_delta[0:3,0:3]
@@ -56,6 +76,11 @@ def Transforms():
 
     return quad_dim, K_image_to_pix, T_cam_to_image, R_delta, C_delta, \
             ori_vertex_array, translation_offset
+
+def invert_tf(tf):
+    tf[0:3, 0:3] = tf[0:3, 0:3].T
+    tf[0:3, 3] = np.matmul(-tf[0:3, 0:3], tf[0:3, 3])
+    return tf
 
 def Matrix_from_Pose(msg_pose,offset=0.):
     quaternion = (
@@ -84,7 +109,9 @@ def vertex_coordinates(msg_pose_Quad,msg_pose_RealSense):
 
     #Homogeneous Transformation: World -> Camera frame
     T_cam_to_world = Matrix_from_Pose(msg_pose_RealSense)
-    T_world_to_cam = np.linalg.inv(T_cam_to_world)
+    # T_world_to_cam = np.linalg.inv(T_cam_to_world)
+    # print("WARNING - need to change how tf inverse is done!")
+    T_world_to_cam = invert_tf(T_cam_to_world)
 
     vertex = np.zeros((4,1))
     vertex_pixels_array = np.zeros((8,2))
@@ -94,12 +121,12 @@ def vertex_coordinates(msg_pose_Quad,msg_pose_RealSense):
         vertex = np.matmul(T_world_to_cam  ,vertex)
         vertex = np.matmul(T_cam_to_image  ,vertex)
         vertex_pixels = np.matmul(K_image_to_pix ,vertex)
-        vertex_pixels = np.true_divide(vertex_pixels ,vertex_pixels[2][0])
+        vertex_pixels = np.true_divide(vertex_pixels ,vertex_pixels[2][0])  # [col, row]
         vertex_pixels_array[index,:2] = vertex_pixels[:2,0]
 
     vertex_pixels_array = np.squeeze(vertex_pixels_array)
-    max_coords = np.amax(vertex_pixels_array,axis=0)
-    min_coords = np.amin(vertex_pixels_array,axis=0)
+    max_coords = np.amax(vertex_pixels_array,axis=0)  # [col, row]
+    min_coords = np.amin(vertex_pixels_array,axis=0)  # [col, row]
 
     return vertex_pixels_array, max_coords, min_coords
 

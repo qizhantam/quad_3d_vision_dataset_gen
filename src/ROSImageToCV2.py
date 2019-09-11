@@ -10,9 +10,12 @@ import os
 def load_bag_date_timestamp():
     # bag_date = '20190309'
     bag_date = '20190910'
-    # bag_timestamp = '2019-03-09-12-19-21'
-    # bag_timestamp = '2019-03-09-12-14-29'
-    bag_timestamp = '2019-09-10-12-50-30'
+
+    # bag_timestamp = '2019-03-09-12-19-21'  # small sequence (24 images)
+    # bag_timestamp = '2019-03-09-12-14-29'  # training data
+    bag_timestamp = '2019-09-10-12-50-30'  # gentle, small bounding box
+    # bag_timestamp = '2019-09-10-16-58-50'  # sharp turns
+    # bag_timestamp = '2019-09-10-17-01-41'  # yawing
     return bag_date, bag_timestamp
 
 def main():
@@ -37,6 +40,8 @@ def main():
     bag_pose_RealSense = read_bag(bag_date,bag_timestamp,bag_directory,'pose_RealSense')
     bag_pose_Quad = read_bag(bag_date,bag_timestamp,bag_directory,'pose_Quad')
     # bag_pose_Quad = read_bag(bag_date,bag_timestamp,bag_directory,'pose_Calibration')
+
+    save_gt_dir = './Yolo/results/results_' + bag_timestamp + '/pose_gtboxes_and_time'
 
     save_image_Rectangle_directory = '../export_data/' + bag_date + '/drawn_Rectangle/' + bag_timestamp
     save_image_Wireframe_directory = '../export_data/' + bag_date + '/drawn_Wireframe/' + bag_timestamp
@@ -83,6 +88,7 @@ def main():
         t_end_rgb = t_depth+rospy.Duration(0.1)
         ## Get messages with timestamps closest to the depth's message
         rgb_lag_time = 0 #0.2 #compensate how far behind is rgb's actual timestamp vs. pose timestamp
+        # rgb_lag_time = 0.2 #compensate how far behind is rgb's actual timestamp vs. pose timestamp
         msg_rgb, t_rgb                       = closest_msg(t_depth, t_start, t_end, bag_rgb, 0.)
         msg_pose_RealSense, t_pose_RealSense = closest_msg(t_depth, t_start, t_end, bag_pose_RealSense, rgb_lag_time)
         msg_pose_Quad, t_pose_Quad           = closest_msg(t_depth, t_start, t_end, bag_pose_Quad, rgb_lag_time)
@@ -125,26 +131,28 @@ def main():
             rgb_filename = save_image(cv_rgb_NoDrawing    ,save_image_NoDrawing_directory,'rgb'  ,file_postfix)
             # label_text(save_label_text_directory, file_postfix, max_coords, min_coords, 'depth')
             label_text(save_label_text_directory, file_postfix, max_coords, min_coords, 'rgb')
-            if output_Time_and_Pose == True:
-                file_type = "pose_and_time"
-                directory = save_label_text_directory + "_" + file_type
-                if not os.path.exists(directory):
-                    os.makedirs(directory)
-                filename = directory + '/' + file_type + ('_%i.txt' % (file_postfix))
-                # pdb.set_trace()
-                file = open(filename,'w')
-                write_str = "{:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f}".format(
-                    t_rgb.secs + t_rgb.nsecs*10**-9 - time_0,
-                    t_pose_Quad.secs + t_pose_Quad.nsecs*10**-9 - time_0,
-                    msg_pose_Quad.pose.position.x, 
-                    msg_pose_Quad.pose.position.y, 
-                    msg_pose_Quad.pose.position.z,
-                    msg_pose_Quad.pose.orientation.w, 
-                    msg_pose_Quad.pose.orientation.x, 
-                    msg_pose_Quad.pose.orientation.y, 
-                    msg_pose_Quad.pose.orientation.z)
-                file.write(write_str)
-                file.close()
+        
+        if output_Time_and_Pose == True:
+            file_type = "pose_gtboxes_and_time"
+            if not os.path.exists(save_gt_dir):
+                os.makedirs(save_gt_dir)
+            filename = save_gt_dir + '/' + file_type + ('_%i.txt' % (file_postfix))
+            # pdb.set_trace()
+            file = open(filename,'w')
+            write_str = "{:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f}".format(
+                t_rgb.secs + t_rgb.nsecs*10**-9 - time_0,
+                t_pose_Quad.secs + t_pose_Quad.nsecs*10**-9 - time_0,
+                msg_pose_Quad.pose.position.x, 
+                msg_pose_Quad.pose.position.y, 
+                msg_pose_Quad.pose.position.z,
+                msg_pose_Quad.pose.orientation.w, 
+                msg_pose_Quad.pose.orientation.x, 
+                msg_pose_Quad.pose.orientation.y, 
+                msg_pose_Quad.pose.orientation.z,
+                max_coords[0], max_coords[1],
+                min_coords[0], min_coords[1])
+            file.write(write_str)
+            file.close()
 
 
         if output_Video == True:
